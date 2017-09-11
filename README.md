@@ -6,3 +6,4 @@
         - `brew tap homebrew/science`
         - `brew install opencv3 --with-contrib --with-python3 --HEAD`
 - `pip install -r requirements.txt`
+- `./create_symlinks.sh` to symlink data from dropbox to local
