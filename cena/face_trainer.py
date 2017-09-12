@@ -16,5 +16,5 @@ for f in glob.glob(path):
     imgs.append(i_resize)
     labels.append(int(f.split('.')[1]))
 
-recognizer.train(imgs,np.array(labels))
+recognizer.train(imgs, np.array(labels))
 recognizer.write('trained_recognizer.yaml')
