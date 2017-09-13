@@ -105,3 +105,5 @@ ENV/
 
 # data (it's symlinked to dropbox)
 data
+
+*.DS_Store
