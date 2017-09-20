@@ -23,3 +23,5 @@
     - https://gist.github.com/ageitgey/ddbae3b209b6344a458fa41a3cf75719
     - cd into openface then `./batch-represent/main.lua -outDir ../../datascope/cena/data/generated-embeddings/ -data ../../datascope/cena/data/training-images/`
     
+- install dlib on the rpi 
+    - http://www.pyimagesearch.com/2017/05/01/install-dlib-raspberry-pi/
