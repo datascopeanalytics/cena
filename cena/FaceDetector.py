@@ -1,3 +1,6 @@
+# Face detection on the jevois
+# We're not using this but keeping it for posterity
+
 import libjevois as jevois
 import cv2
 import os
@@ -7,7 +10,7 @@ class FaceDetector:
     # ###################################################################################################
     # Constructor
     def __init__(self):
-        code_path = '/jevois/modules/JeVois/FaceDetector'
+        code_path = '/jevois/modules/JeVois/cena'
 
         cascPath = os.path.join(code_path, 'haarcascade_frontalface_default.xml')
         self.faceCascade = cv2.CascadeClassifier(cascPath)
