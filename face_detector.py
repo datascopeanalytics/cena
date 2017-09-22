@@ -1,9 +1,11 @@
 import subprocess
 import cv2
 from datetime import datetime
+import numpy as np
+from requests import request, post
 
 from cena.recognition import FaceRecognizer
-from cena.settings import RYAN_SONG_PATH, DEV, CASCADE_FILE_PATH
+from cena.settings import RYAN_SONG_PATH, DEV, CASCADE_FILE_PATH, SERVER_URL
 
 
 def play_mp3(path):
@@ -16,8 +18,9 @@ def listen_for_quit():
         return True
 
 
-def get_server_response():
-    return None, None, None
+def get_server_response(frame, list_o_faces):
+    response = post(SERVER_URL, json={'list_o_faces': list_o_faces, 'frame': frame.tolist()})  # , files=files)
+    return response.json()['frame'], response.json()['people_list'], response.json()['time']
 
 
 def process_frame(video_capture, face_recognizer=None):
@@ -35,18 +38,22 @@ def process_frame(video_capture, face_recognizer=None):
             flags=cv2.CASCADE_SCALE_IMAGE
         )
 
-        # Draw a rectangle around the faces
         if len(faces) > 0:
             # RYAN_PLAYED = play_mp3(RYAN_SONG_PATH, RYAN_PLAYED)
             list_o_faces = []
             for x, y, w, h in faces:
                 list_o_faces.append([int(x), int(y), int(w), int(h)])
             if DEV:
-                frame, people_list, time = face_recognizer.recognize_faces(frame, list_o_faces)
+                # frame, people_list, time = face_recognizer.recognize_faces(frame, list_o_faces)
+                frame, people_list, time = get_server_response(frame, list_o_faces)
+                frame = np.array(frame)
+                frame = frame.astype('uint8')
             else:
-                frame, people_list, time = get_server_response()
-            play_mp3(RYAN_SONG_PATH)
-            print(people_list, time)
+                frame, people_list, time = get_server_response(frame, list_o_faces)
+                frame = np.array(frame)
+                frame = frame.astype('uint8')
+            # play_mp3(RYAN_SONG_PATH)
+            print(people_list, datetime.now() - now)
         else:
             print(datetime.now() - now)
 
@@ -67,6 +74,8 @@ face_cascade = cv2.CascadeClassifier(CASCADE_FILE_PATH)
 if DEV:
     face_recognizer = FaceRecognizer()
     video_capture = cv2.VideoCapture(1)
+    video_capture.set(cv2.CAP_PROP_FRAME_WIDTH, 320)
+    video_capture.set(cv2.CAP_PROP_FRAME_HEIGHT, 240)
 
 else:
     video_capture = cv2.VideoCapture(0)

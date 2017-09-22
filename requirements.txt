@@ -2,3 +2,4 @@ opencv-python==3.3.0.10
 dlib
 scikit-image
 pyserial==3.4
+flask==0.12.2
