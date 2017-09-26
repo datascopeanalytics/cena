@@ -33,4 +33,5 @@ REPS_FILE_PATH = os.path.join(TRAIN_DATA_PATH, REPS_FILE_NAME)
 RYAN_FILE_NAME = 'dun_dun_dun.mp3'
 RYAN_SONG_PATH = os.path.join(SONGS_DIR, RYAN_FILE_NAME)
 
-SERVER_URL = 'http://localhost:5000/recognize'
+# SERVER_URL = 'http://localhost:5000/recognize'
+SERVER_URL = 'http://52.207.182.58:5000/recognize'

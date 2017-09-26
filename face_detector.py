@@ -6,6 +6,7 @@ from requests import request, post
 
 from cena.recognition import FaceRecognizer
 from cena.settings import RYAN_SONG_PATH, DEV, CASCADE_FILE_PATH, SERVER_URL
+from cena.utils import encode_image, decode_image
 
 
 def play_mp3(path):
@@ -19,8 +20,19 @@ def listen_for_quit():
 
 
 def get_server_response(frame, list_o_faces):
-    response = post(SERVER_URL, json={'list_o_faces': list_o_faces, 'frame': frame.tolist()})  # , files=files)
-    return response.json()['frame'], response.json()['people_list'], response.json()['time']
+    # response = post(SERVER_URL, json={'list_o_faces': list_o_faces, 'frame': frame.tolist()})  # , files=files)
+    shape = frame.shape
+    request_json = {
+        'list_o_faces': list_o_faces,
+        'frame': encode_image(frame),
+        'shape': shape
+    }
+    response = post(SERVER_URL, json=request_json)
+    frame = decode_image(response.json()['frame'], shape)
+    people_list = response.json()['people_list']
+    time = response.json()['time']
+    return frame, people_list, time
+    # return response.json()['frame'], response.json()['people_list'], response.json()['time']
 
 
 def process_frame(video_capture, face_recognizer=None):
@@ -37,7 +49,6 @@ def process_frame(video_capture, face_recognizer=None):
             minSize=(80, 80),
             flags=cv2.CASCADE_SCALE_IMAGE
         )
-
         if len(faces) > 0:
             # RYAN_PLAYED = play_mp3(RYAN_SONG_PATH, RYAN_PLAYED)
             list_o_faces = []
@@ -46,12 +57,12 @@ def process_frame(video_capture, face_recognizer=None):
             if DEV:
                 # frame, people_list, time = face_recognizer.recognize_faces(frame, list_o_faces)
                 frame, people_list, time = get_server_response(frame, list_o_faces)
-                frame = np.array(frame)
-                frame = frame.astype('uint8')
+                # frame = np.array(frame)
+                # frame = frame.astype('uint8')
             else:
                 frame, people_list, time = get_server_response(frame, list_o_faces)
-                frame = np.array(frame)
-                frame = frame.astype('uint8')
+                # frame = np.array(frame)
+                # frame = frame.astype('uint8')
             # play_mp3(RYAN_SONG_PATH)
             print(people_list, datetime.now() - now)
         else:
