@@ -50,7 +50,7 @@ def get_api_server_ip_address():
         instance_ip = instance.public_ip_address
     else:
         instance_ip = instance.public_ip_address
-        print(f'instance already running at {instance_ip}')
+        print('instance already running at {}'.format(instance_ip))
 
     # start_if_not_started(instance)
     # instance_ip = instance.public_ip_address
@@ -62,14 +62,14 @@ def start_if_not_started(instance):
         start_instance(instance)
     else:
         instance_ip = instance.public_ip_address
-        print(f'instance already running at {instance_ip}')
+        print('instance already running at {}'.format(instance_ip))
 
 
 def start_instance(instance):
-    print(f'Starting instance {instance}...')
+    print('Starting instance {}...'.format(instance))
     response = instance.start()
     instance.wait_until_running()
-    print(f'Instance started at {instance.public_ip_address}')
+    print('Instance started at {}'.format(instance.public_ip_address))
 
 #
 # class EC2Manager(object):

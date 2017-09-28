@@ -3,8 +3,12 @@ import os
 ENVIRONMENT = 'dev'
 # ENVIRONMENT = 'nah dude'
 DEV = ENVIRONMENT == 'dev'
+
 YOLO_MODE = True
-ANNOTATE_FRAME = False
+# YOLO_MODE = False
+
+ANNOTATE_FRAME = True
+# ANNOTATE_FRAME = False
 
 API_SERVER_NAME = 'face-api'
 
