@@ -9,7 +9,8 @@ import openface
 import pandas as pd
 from sklearn.svm import SVC
 
-from cena.settings import SHAPE_PREDICTOR_FILE_PATH, CASCADE_FILE_PATH, FEATURE_EXTRACTOR_FILE_PATH, DEV, LABELS_FILE_PATH, REPS_FILE_PATH
+from cena.settings import (SHAPE_PREDICTOR_FILE_PATH, CASCADE_FILE_PATH, FEATURE_EXTRACTOR_FILE_PATH,
+                           DEV, LABELS_FILE_PATH, REPS_FILE_PATH, ANNOTATE_FRAME)
 
 
 class FaceRecognizer(object):
@@ -21,20 +22,21 @@ class FaceRecognizer(object):
 
         self.face_cascade = cv2.CascadeClassifier(CASCADE_FILE_PATH)
         print('loaded face cascade')
-        self.clf = self.train_model()
-        print('classifier trained')
+        self.clf, self.user_list = self.train_model()
         self.net = openface.TorchNeuralNet(FEATURE_EXTRACTOR_FILE_PATH)
         print('loaded torch nn')
 
     def train_model(self):
-        labels = pd.read_csv(LABELS_FILE_PATH, header=None).rename(columns={0:'label', 1:'user'})
+        labels = pd.read_csv(LABELS_FILE_PATH, header=None).rename(columns={0: 'label', 1: 'user'})
         labels.user = labels.user.apply(lambda x: x.split('/')[-2])
+        user_list = labels.user.unique()
         x = pd.read_csv(REPS_FILE_PATH, header=None)
 
         clf = SVC(C=1, kernel='linear', probability=True)
         clf.fit(x, labels.user)
         print('classifier trained')
-        return clf
+        print('users found:', user_list)
+        return clf, user_list
 
     def output_training_features(self, inpath, outpath):
         frame = cv2.imread(inpath)
@@ -66,14 +68,19 @@ class FaceRecognizer(object):
             highest_prob_index = np.argmax(pred_probs)
             pred_name = self.clf.classes_[highest_prob_index]
             pred_prob = max(pred_probs)
-            pred_names.append({pred_name:pred_prob})
+            pred_names.append({pred_name: pred_prob})
 
-            if DEV:
+            if DEV and ANNOTATE_FRAME:
                 pose_landmarks = self.face_pose_predictor(frame, rect)
                 cv2.putText(frame, '{}: {}'.format(pred_name, pred_prob), (x, y), cv2.FONT_HERSHEY_SIMPLEX, 1,
                             (102, 204, 102), thickness=2)
                 for point in pose_landmarks.parts():
                     x, y = point.x, point.y
                     cv2.circle(frame, (x, y), 5, (0, 255, 0), -1)
-        end = datetime.now()
-        return frame, pred_names, (end - start).microseconds / 1000
+
+                end = datetime.now()
+                return frame, pred_names, (end - start).microseconds / 1000
+            else:
+                end = datetime.now()
+                return pred_names, (end - start).microseconds / 1000
+

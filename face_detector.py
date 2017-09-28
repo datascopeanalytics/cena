@@ -1,16 +1,12 @@
-import subprocess
 import cv2
+from requests import post
 from datetime import datetime
-import numpy as np
-from requests import request, post
 
 from cena.recognition import FaceRecognizer
-from cena.settings import RYAN_SONG_PATH, DEV, CASCADE_FILE_PATH, SERVER_URL
-from cena.utils import encode_image, decode_image
+from cena.settings import DEV, ANNOTATE_FRAME, CASCADE_FILE_PATH, SERVER_URL
+from cena.song_manager import SongManager
+from cena.utils import encode_image, decode_image, play_mp3
 
-
-def play_mp3(path):
-    process = subprocess.Popen(['mpg123', '-q', path])
 
 
 def listen_for_quit():
@@ -28,10 +24,14 @@ def get_server_response(frame, list_o_faces):
         'shape': shape
     }
     response = post(SERVER_URL, json=request_json)
-    frame = decode_image(response.json()['frame'], shape)
     people_list = response.json()['people_list']
     time = response.json()['time']
-    return frame, people_list, time
+
+    if ANNOTATE_FRAME and DEV:
+        frame = decode_image(response.json()['frame'], shape)
+        return frame, people_list, time
+    else:
+        return people_list, time
     # return response.json()['frame'], response.json()['people_list'], response.json()['time']
 
 
@@ -40,8 +40,9 @@ def process_frame(video_capture, face_recognizer=None):
         return
     try:
         now = datetime.now()
-        ret, frame = video_capture.read()
-        frame_gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+        ret, frame = video_capture.read(cv2.COLOR_BGR2GRAY)
+        frame_gray = frame
+        # frame_gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
         faces = face_cascade.detectMultiScale(
             frame_gray,
             scaleFactor=1.1,
@@ -54,15 +55,13 @@ def process_frame(video_capture, face_recognizer=None):
             list_o_faces = []
             for x, y, w, h in faces:
                 list_o_faces.append([int(x), int(y), int(w), int(h)])
-            if DEV:
+            if DEV and ANNOTATE_FRAME:
                 # frame, people_list, time = face_recognizer.recognize_faces(frame, list_o_faces)
                 frame, people_list, time = get_server_response(frame, list_o_faces)
-                # frame = np.array(frame)
-                # frame = frame.astype('uint8')
+            elif DEV:
+                people_list, time = face_recognizer.recognize_faces(frame, list_o_faces)
             else:
-                frame, people_list, time = get_server_response(frame, list_o_faces)
-                # frame = np.array(frame)
-                # frame = frame.astype('uint8')
+                people_list, time = get_server_response(frame, list_o_faces)
             # play_mp3(RYAN_SONG_PATH)
             print(people_list, datetime.now() - now)
         else:
@@ -81,9 +80,18 @@ def process_frame(video_capture, face_recognizer=None):
         print(error)
         return
 
+song_manager = SongManager()
+person_songs = song_manager.person_songs
+print('found songs:')
+print(person_songs)
+
 face_cascade = cv2.CascadeClassifier(CASCADE_FILE_PATH)
 if DEV:
     face_recognizer = FaceRecognizer()
+    trained_people = face_recognizer.user_list
+    print('people i recognize but do not have a song for:')
+    print([i for i in trained_people if i not in person_songs])
+
     video_capture = cv2.VideoCapture(1)
     video_capture.set(cv2.CAP_PROP_FRAME_WIDTH, 320)
     video_capture.set(cv2.CAP_PROP_FRAME_HEIGHT, 240)

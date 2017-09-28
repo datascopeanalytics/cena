@@ -5,6 +5,7 @@ from scipy.misc import toimage
 
 from cena.recognition import FaceRecognizer
 from cena.utils import decode_image, encode_image
+from cena.settings import DEV, ANNOTATE_FRAME
 
 RECOGNIZER = FaceRecognizer()
 app = Flask(__name__)
@@ -32,19 +33,15 @@ def recognize():
     frame = decode_image(encoded_frame, shape)
     list_o_faces = request.json['list_o_faces']
 
-    # print(type(list_o_faces[0][0]))
-
     frame, people_list, time = RECOGNIZER.recognize_faces(frame, list_o_faces)
-    # response = {
-    #     'people_list': people_list,
-    #     'frame': frame.tolist(),
-    #     'time': time
-    # }
+
     response = {
         'people_list': people_list,
-        'frame': encode_image(frame),
         'time': time
     }
+
+    if DEV and ANNOTATE_FRAME:
+        response.update({'frame': encode_image(frame)})
     return jsonify(response)
 
 if __name__ == '__main__':
