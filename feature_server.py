@@ -34,6 +34,10 @@ def recognize():
     list_o_faces = request.json['list_o_faces']
 
     frame, people_list, time = RECOGNIZER.recognize_faces(frame, list_o_faces)
+    # if ANNOTATE_FRAME:
+    #     frame, people_list, time = RECOGNIZER.recognize_faces(frame, list_o_faces)
+    # else:
+    #     people_list, time = RECOGNIZER.recognize_faces(frame, list_o_faces)
 
     response = {
         'people_list': people_list,

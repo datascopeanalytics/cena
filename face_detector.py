@@ -8,7 +8,6 @@ from cena.song_manager import SongManager
 from cena.utils import encode_image, decode_image, play_mp3
 
 
-
 def listen_for_quit():
     k = cv2.waitKey(1)
     if k == ord('q'):
@@ -59,7 +58,8 @@ def process_frame(video_capture, face_recognizer=None):
                 # frame, people_list, time = face_recognizer.recognize_faces(frame, list_o_faces)
                 frame, people_list, time = get_server_response(frame, list_o_faces)
             elif DEV:
-                people_list, time = face_recognizer.recognize_faces(frame, list_o_faces)
+                people_list, time = get_server_response(frame, list_o_faces)
+                # people_list, time = face_recognizer.recognize_faces(frame, list_o_faces)
             else:
                 people_list, time = get_server_response(frame, list_o_faces)
             # play_mp3(RYAN_SONG_PATH)

@@ -70,7 +70,7 @@ class FaceRecognizer(object):
             pred_prob = max(pred_probs)
             pred_names.append({pred_name: pred_prob})
 
-            if DEV and ANNOTATE_FRAME:
+            if ANNOTATE_FRAME:
                 pose_landmarks = self.face_pose_predictor(frame, rect)
                 cv2.putText(frame, '{}: {}'.format(pred_name, pred_prob), (x, y), cv2.FONT_HERSHEY_SIMPLEX, 1,
                             (102, 204, 102), thickness=2)
@@ -78,9 +78,20 @@ class FaceRecognizer(object):
                     x, y = point.x, point.y
                     cv2.circle(frame, (x, y), 5, (0, 255, 0), -1)
 
-                end = datetime.now()
-                return frame, pred_names, (end - start).microseconds / 1000
-            else:
-                end = datetime.now()
-                return pred_names, (end - start).microseconds / 1000
+            end = datetime.now()
+            return frame, pred_names, (end - start).microseconds / 1000
+
+            # if DEV and ANNOTATE_FRAME:
+            #     pose_landmarks = self.face_pose_predictor(frame, rect)
+            #     cv2.putText(frame, '{}: {}'.format(pred_name, pred_prob), (x, y), cv2.FONT_HERSHEY_SIMPLEX, 1,
+            #                 (102, 204, 102), thickness=2)
+            #     for point in pose_landmarks.parts():
+            #         x, y = point.x, point.y
+            #         cv2.circle(frame, (x, y), 5, (0, 255, 0), -1)
+            #
+            #     end = datetime.now()
+            #     return frame, pred_names, (end - start).microseconds / 1000
+            # else:
+            #     end = datetime.now()
+            #     return pred_names, (end - start).microseconds / 1000
 

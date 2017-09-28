@@ -1,4 +1,5 @@
 import os
+from ast import literal_eval
 
 ENVIRONMENT = 'dev'
 # ENVIRONMENT = 'nah dude'
@@ -7,8 +8,14 @@ DEV = ENVIRONMENT == 'dev'
 YOLO_MODE = True
 # YOLO_MODE = False
 
-ANNOTATE_FRAME = True
-# ANNOTATE_FRAME = False
+# ANNOTATE_FRAME = True
+ANNOTATE_FRAME = False
+
+CLIENT_ENV_VAR = os.getenv('FACE_CLIENT', True)
+if not isinstance(CLIENT_ENV_VAR, bool):
+    IS_CLIENT = literal_eval(CLIENT_ENV_VAR)
+else:
+    IS_CLIENT = CLIENT_ENV_VAR
 
 API_SERVER_NAME = 'face-api'
 
@@ -39,9 +46,12 @@ REPS_FILE_PATH = os.path.join(TRAIN_DATA_PATH, REPS_FILE_NAME)
 RYAN_FILE_NAME = 'dun_dun_dun.mp3'
 RYAN_SONG_PATH = os.path.join(SONGS_DIR, RYAN_FILE_NAME)
 
-from cena.utils import get_api_server_ip_address
-# SERVER_URL = 'http://localhost:5000/recognize'
-# SERVER_IP = 'localhost'
-SERVER_IP = get_api_server_ip_address()
+if IS_CLIENT:
+    from cena.utils import get_api_server_ip_address
+    # SERVER_URL = 'http://localhost:5000/recognize'
+    SERVER_IP = get_api_server_ip_address()
+    # SERVER_URL = 'http://107.20.57.175:5000/recognize'
+else:
+    SERVER_IP = 'localhost'
+
 SERVER_URL = 'http://{}:5000/recognize'.format(SERVER_IP)
-# SERVER_URL = 'http://107.20.57.175:5000/recognize'
