@@ -1,12 +1,12 @@
 import os
+import pytz
 from ast import literal_eval
 
-ENVIRONMENT = 'dev'
-# ENVIRONMENT = 'nah dude'
+ENVIRONMENT = os.getenv('FACE_ENV', 'lol')
 DEV = ENVIRONMENT == 'dev'
 
-YOLO_MODE = True
-# YOLO_MODE = False
+# YOLO_MODE = True
+YOLO_MODE = False
 
 # ANNOTATE_FRAME = True
 ANNOTATE_FRAME = False
@@ -28,7 +28,6 @@ if DEV:
     FEATURE_EXTRACTOR_FILE_NAME = 'nn4.small2.v1.t7'
 else:
     FEATURE_EXTRACTOR_FILE_NAME = 'nn4.small2.v1.t7'
-    # FEATURE_EXTRACTOR_FILE_NAME = 'nn4.small2.v1.ascii.t7'
 
 CASCADE_FILE_PATH = os.path.join(MODELS_DIR, CASCADE_FILE_NAME)
 SHAPE_PREDICTOR_FILE_PATH = os.path.join(MODELS_DIR, SHAPE_PREDICTOR_FILE_NAME)
@@ -46,12 +45,16 @@ REPS_FILE_PATH = os.path.join(TRAIN_DATA_PATH, REPS_FILE_NAME)
 RYAN_FILE_NAME = 'dun_dun_dun.mp3'
 RYAN_SONG_PATH = os.path.join(SONGS_DIR, RYAN_FILE_NAME)
 
-if IS_CLIENT:
+if not DEV:
     from cena.utils import get_api_server_ip_address
-    # SERVER_URL = 'http://localhost:5000/recognize'
     SERVER_IP = get_api_server_ip_address()
-    # SERVER_URL = 'http://107.20.57.175:5000/recognize'
 else:
     SERVER_IP = 'localhost'
 
 SERVER_URL = 'http://{}:5000/recognize'.format(SERVER_IP)
+
+TIME_ZONE = pytz.timezone('America/Chicago')
+
+WINDOW_SIZE = 20
+MIN_SEEN = 5
+PROBA_THRESHOLD = 0.4

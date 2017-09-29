@@ -30,6 +30,7 @@ def recognize():
     # print(frame[0][0].dtype)
     encoded_frame = request.json['frame']
     shape = request.json['shape']
+    return_frame = request.json.get('return_frame', False)
     frame = decode_image(encoded_frame, shape)
     list_o_faces = request.json['list_o_faces']
 
@@ -44,7 +45,7 @@ def recognize():
         'time': time
     }
 
-    if DEV and ANNOTATE_FRAME:
+    if return_frame:
         response.update({'frame': encode_image(frame)})
     return jsonify(response)
 

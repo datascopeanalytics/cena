@@ -10,7 +10,7 @@ import pandas as pd
 from sklearn.svm import SVC
 
 from cena.settings import (SHAPE_PREDICTOR_FILE_PATH, CASCADE_FILE_PATH, FEATURE_EXTRACTOR_FILE_PATH,
-                           DEV, LABELS_FILE_PATH, REPS_FILE_PATH, ANNOTATE_FRAME)
+                           DEV, LABELS_FILE_PATH, REPS_FILE_PATH, ANNOTATE_FRAME, TIME_ZONE)
 
 
 class FaceRecognizer(object):
@@ -55,8 +55,10 @@ class FaceRecognizer(object):
             self.output_training_features(file_path, os.path.join(out_dir + file_path.split('/')[-1]))
 
     def recognize_faces(self, frame, list_o_faces):
-        start = datetime.now()
-        pred_names = []
+        start = datetime.now(TIME_ZONE)
+        pred_names = {}
+        if frame.shape[-1] != 3:
+            frame = cv2.cvtColor(frame, cv2.COLOR_GRAY2RGB)
         for x, y, w, h in list_o_faces:
             rect = dlib.rectangle(left=x, top=y, right=x+w, bottom=y+h)
             aligned_face = self.face_aligner.align(96, frame, rect,
@@ -68,7 +70,7 @@ class FaceRecognizer(object):
             highest_prob_index = np.argmax(pred_probs)
             pred_name = self.clf.classes_[highest_prob_index]
             pred_prob = max(pred_probs)
-            pred_names.append({pred_name: pred_prob})
+            pred_names.update({pred_name: pred_prob})
 
             if ANNOTATE_FRAME:
                 pose_landmarks = self.face_pose_predictor(frame, rect)
@@ -78,7 +80,7 @@ class FaceRecognizer(object):
                     x, y = point.x, point.y
                     cv2.circle(frame, (x, y), 5, (0, 255, 0), -1)
 
-            end = datetime.now()
+            end = datetime.now(TIME_ZONE)
             return frame, pred_names, (end - start).microseconds / 1000
 
             # if DEV and ANNOTATE_FRAME:

@@ -3,7 +3,7 @@ from requests import post
 from datetime import datetime
 
 from cena.recognition import FaceRecognizer
-from cena.settings import DEV, ANNOTATE_FRAME, CASCADE_FILE_PATH, SERVER_URL
+from cena.settings import DEV, ANNOTATE_FRAME, CASCADE_FILE_PATH, SERVER_URL, TIME_ZONE
 from cena.song_manager import SongManager
 from cena.utils import encode_image, decode_image, play_mp3
 
@@ -14,23 +14,23 @@ def listen_for_quit():
         return True
 
 
-def get_server_response(frame, list_o_faces):
+def get_server_response(frame, list_o_faces, return_frame=False):
     # response = post(SERVER_URL, json={'list_o_faces': list_o_faces, 'frame': frame.tolist()})  # , files=files)
     shape = frame.shape
     request_json = {
         'list_o_faces': list_o_faces,
         'frame': encode_image(frame),
-        'shape': shape
+        'shape': shape,
+        'return_frame': return_frame
     }
     response = post(SERVER_URL, json=request_json)
+
     people_list = response.json()['people_list']
     time = response.json()['time']
 
-    if ANNOTATE_FRAME and DEV:
+    if return_frame:
         frame = decode_image(response.json()['frame'], shape)
-        return frame, people_list, time
-    else:
-        return people_list, time
+    return frame, people_list, time
     # return response.json()['frame'], response.json()['people_list'], response.json()['time']
 
 
@@ -38,34 +38,41 @@ def process_frame(video_capture, face_recognizer=None):
     if not video_capture.grab():
         return
     try:
-        now = datetime.now()
-        ret, frame = video_capture.read(cv2.COLOR_BGR2GRAY)
+        now = datetime.now(TIME_ZONE)
+        if now.hour > 21:
+            song_manager.blank_the_slate()
+
+        ret, frame = video_capture.read()
+        frame = cv2.cvtColor(frame, cv2.COLOR_RGB2GRAY)
+        # ret, frame = video_capture.read(cv2.COLOR_BGR2GRAY)
+        # ret, frame = video_capture.read(cv2.IMREAD_GRAYSCALE)
         frame_gray = frame
         # frame_gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+        # frame = frame_gray
         faces = face_cascade.detectMultiScale(
             frame_gray,
-            scaleFactor=1.1,
+            # scaleFactor=1.1,
             minNeighbors=5,
             minSize=(80, 80),
-            flags=cv2.CASCADE_SCALE_IMAGE
+            # minSize=(60, 60),
+            # flags=cv2.CASCADE_SCALE_IMAGE
         )
         if len(faces) > 0:
-            # RYAN_PLAYED = play_mp3(RYAN_SONG_PATH, RYAN_PLAYED)
             list_o_faces = []
             for x, y, w, h in faces:
                 list_o_faces.append([int(x), int(y), int(w), int(h)])
-            if DEV and ANNOTATE_FRAME:
-                # frame, people_list, time = face_recognizer.recognize_faces(frame, list_o_faces)
-                frame, people_list, time = get_server_response(frame, list_o_faces)
-            elif DEV:
-                people_list, time = get_server_response(frame, list_o_faces)
-                # people_list, time = face_recognizer.recognize_faces(frame, list_o_faces)
+            if DEV:
+                frame, people_list, time = face_recognizer.recognize_faces(frame, list_o_faces)
+                # frame, people_list, time = get_server_response(frame, list_o_faces, ANNOTATE_FRAME)
             else:
-                people_list, time = get_server_response(frame, list_o_faces)
-            # play_mp3(RYAN_SONG_PATH)
-            print(people_list, datetime.now() - now)
+                frame, people_list, time = get_server_response(frame, list_o_faces, ANNOTATE_FRAME)
+            for person, proba in people_list.items():
+                song_played = song_manager.update_window(person, proba)
+                if song_played:
+                    print(people_list, datetime.now(TIME_ZONE) - now)
         else:
-            print(datetime.now() - now)
+            pass
+            # print(datetime.now(TIME_ZONE) - now)
 
         if DEV:
             # Display the resulting frame
@@ -93,12 +100,15 @@ if DEV:
     print([i for i in trained_people if i not in person_songs])
 
     video_capture = cv2.VideoCapture(1)
+    video_capture.set(cv2.CAP_PROP_FPS, 5)
     video_capture.set(cv2.CAP_PROP_FRAME_WIDTH, 320)
     video_capture.set(cv2.CAP_PROP_FRAME_HEIGHT, 240)
+    # video_capture.set(cv2.CAP_PROP_FRAME_WIDTH, 400)
+    # video_capture.set(cv2.CAP_PROP_FRAME_HEIGHT, 300)
 
 else:
     video_capture = cv2.VideoCapture(0)
-    video_capture.set(cv2.cv.CV_CAP_PROP_FPS, 25)
+    video_capture.set(cv2.cv.CV_CAP_PROP_FPS, 5)
     # video_capture.set(cv2.cv.CV_CAP_PROP_FRAME_WIDTH, 640)
     # video_capture.set(cv2.cv.CV_CAP_PROP_FRAME_HEIGHT, 480)
     video_capture.set(cv2.cv.CV_CAP_PROP_FRAME_WIDTH, 320)
