@@ -71,5 +71,5 @@ class SongManager(object):
     # may not be the right place, but don't want to forget
     def update_dropbox(self):
         # fixme: make this the right command
-        command = "/home/pi/Dropbox-Uploader/dropbox_uploader.sh download"
+        command = "/home/pi/Dropbox-Uploader/dropbox_uploader.sh download /songs ~/cena/data/songs"
         call([command], shell=True)

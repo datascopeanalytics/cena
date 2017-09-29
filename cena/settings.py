@@ -55,6 +55,6 @@ SERVER_URL = 'http://{}:5000/recognize'.format(SERVER_IP)
 
 TIME_ZONE = pytz.timezone('America/Chicago')
 
-WINDOW_SIZE = 20
-MIN_SEEN = 5
+WINDOW_SIZE = 10
+MIN_SEEN = 3
 PROBA_THRESHOLD = 0.4
